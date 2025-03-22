@@ -18,8 +18,8 @@ async def start_command(client: Client, message: Message):
         
         if not await button_manager.check_force_sub(client, message.from_user.id):
             await message.reply_text(
-                "**⚠️ You must join our channel to use this bot!**\n\n"
-                "Please join Our Forcesub Channel and try again.",
+                "**⚠️ You must join our channels to use this bot!**\n\n"
+                "Please join Our Forcesub Channels and try again.",
                 reply_markup=button_manager.force_sub_button(),
                 protect_content=config.PRIVACY_MODE  
             )
@@ -68,3 +68,4 @@ async def start_command(client: Client, message: Message):
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE  
     )
+
