@@ -16,7 +16,16 @@ DATABASE_NAME = os.getenv("DATABASE_NAME")
 
 # Channel Configuration
 DB_CHANNEL_ID = int(os.getenv("DB_CHANNEL_ID"))
-FORCE_SUB_CHANNEL = int(os.getenv("FORCE_SUB_CHANNEL"))
+
+# Force Subscription Channels
+FSUB_CHNL_ID = os.getenv("FSUB_CHNL_ID")
+FSUB_CHNL_LINK = os.getenv("FSUB_CHNL_LINK")
+FSUB_CHNL_2_ID = os.getenv("FSUB_CHNL_2_ID")
+FSUB_CHNL_2_LINK = os.getenv("FSUB_CHNL_2_LINK")
+FSUB_CHNL_3_ID = os.getenv("FSUB_CHNL_3_ID")
+FSUB_CHNL_3_LINK = os.getenv("FSUB_CHNL_3_LINK")
+FSUB_CHNL_4_ID = os.getenv("FSUB_CHNL_4_ID")
+FSUB_CHNL_4_LINK = os.getenv("FSUB_CHNL_4_LINK")
 
 # Bot Information
 BOT_USERNAME = os.getenv("BOT_USERNAME")
@@ -98,92 +107,92 @@ SUPPORTED_MIME_TYPES = [
 
 class Messages:
     START_TEXT = """
-🎉 **Welcome to {bot_name}!** 🎉
+    🎉 **Welcome to {bot_name}!** 🎉
 
-Hello {user_mention}! I'm your secure file sharing assistant.
+    Hello {user_mention}! I'm your secure file sharing assistant.
 
-🔐 **Key Features:**
-• Secure File Sharing
-• Unique Download Links
-• Multiple File Types Support
-• Real-time Tracking
-• Force Subscribe
+    🔐 **Key Features:**
+    • Secure File Sharing
+    • Unique Download Links
+    • Multiple File Types Support
+    • Real-time Tracking
+    • Force Subscribe
 
-📢 Join @Thealphabotz for updates!
-👨‍💻 Contact @adarsh2626 for support
-A Open Source Repo :- github.com/utkarshdubey2008/alphashare
+    📢 Join @Thealphabotz for updates!
+    👨‍💻 Contact @adarsh2626 for support
+    A Open Source Repo :- github.com/utkarshdubey2008/alphashare
 
-Use /help to see available commands!
-"""
+    Use /help to see available commands!
+    """
 
     HELP_TEXT = """
-📚 **Available Commands** 
+    📚 **Available Commands** 
 
-👤 **User Commands:**
-• /start - Start bot
-• /help - Show this help
-• /about - About bot
+    👤 **User Commands:**
+    • /start - Start bot
+    • /help - Show this help
+    • /about - About bot
 
-👑 **Admin Commands:**
-• /upload - Upload file (reply to file)
-• /stats - View statistics
-• /broadcast - Send broadcast
-• Auto-Delete Feature:
-Files are automatically deleted after the set time.
-Use /auto_del to change the deletion time.
-• /short - to shorten any url in modiji 
-usage :- /short example.com
+    👑 **Admin Commands:**
+    • /upload - Upload file (reply to file)
+    • /stats - View statistics
+    • /broadcast - Send broadcast
+    • Auto-Delete Feature:
+    Files are automatically deleted after the set time.
+    Use /auto_del to change the deletion time.
+    • /short - to shorten any url in modiji 
+    usage :- /short example.com
 
-An Open Source Repo :- github.com/utkarshdubey2008/alphashare
+    An Open Source Repo :- github.com/utkarshdubey2008/alphashare
 
-⚠️ For support: @adarsh2626
-"""
+    ⚠️ For support: @adarsh2626
+    """
 
     ABOUT_TEXT = """
-ℹ️ **About {bot_name}**
+    ℹ️ **About {bot_name}**
 
-**Version:** `{version}`
-**Developer:** @adarsh2626
-**Language:** Python
-**Framework:** Pyrogram
+    **Version:** `{version}`
+    **Developer:** @adarsh2626
+    **Language:** Python
+    **Framework:** Pyrogram
 
-📢 **Updates:** @Thealphabotz
-🛠 **Support:** @adarsh2626
+    📢 **Updates:** @Thealphabotz
+    🛠 **Support:** @adarsh2626
 
-**Features:**
-• Secure File Sharing
-• Force Subscribe
-• Admin Controls
-• Real-time Stats
-• Multiple File Types
-• Enhanced Security
-• Automatic File Type Detection
+    **Features:**
+    • Secure File Sharing
+    • Force Subscribe
+    • Admin Controls
+    • Real-time Stats
+    • Multiple File Types
+    • Enhanced Security
+    • Automatic File Type Detection
 
-Made with ❤️ by @adarsh2626
-"""
+    Made with ❤️ by @adarsh2626
+    """
 
     FILE_TEXT = """
-📁 **File Details**
+    📁 **File Details**
 
-**Name:** `{file_name}`
-**Size:** {file_size}
-**Type:** {file_type}
-**Downloads:** {downloads}
-**Uploaded:** {upload_time}
-**By:** {uploader}
+    **Name:** `{file_name}`
+    **Size:** {file_size}
+    **Type:** {file_type}
+    **Downloads:** {downloads}
+    **Uploaded:** {upload_time}
+    **By:** {uploader}
 
-🔗 **Share Link:**
-`{share_link}`
-"""
+    🔗 **Share Link:**
+    `{share_link}`
+    """
 
     FORCE_SUB_TEXT = """
-⚠️ **Access Restricted!**
+    ⚠️ **Access Restricted!**
 
-Please join our channel to use this bot:
-Bot By @Thealphabotz
+    Please join our channel to use this bot:
+    Bot By @Thealphabotz
 
-Click button below, then try again!
-"""
+    Click button below, then try again!
+    """
 
 class Buttons:
     def start_buttons() -> List[List[Dict[str, str]]]:
@@ -231,15 +240,14 @@ class Buttons:
             ]
         ]
 
-
 class Progress:
     PROGRESS_BAR = "█"
     EMPTY_PROGRESS_BAR = "░"
     PROGRESS_TEXT = """
-**{0}** {1}% 
+    **{0}** {1}% 
 
-**⚡️ Speed:** {2}/s
-**💫 Done:** {3}
-**💭 Total:** {4}
-**⏰ Time Left:** {5}
-"""
+    **⚡️ Speed:** {2}/s
+    **💫 Done:** {3}
+    **💭 Total:** {4}
+    **⏰ Time Left:** {5}
+    """
