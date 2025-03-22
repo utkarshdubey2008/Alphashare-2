@@ -4,17 +4,40 @@ import config
 
 class ButtonManager:
     def __init__(self):
-        self.force_sub_channel = config.FORCE_SUB_CHANNEL
         self.db_channel = config.DB_CHANNEL_ID
 
     async def check_force_sub(self, client, user_id: int) -> bool:
-        try:
-            member = await client.get_chat_member(self.force_sub_channel, user_id)
-            if member.status in ["left", "kicked"]:
-                return False
-            return True
-        except:
-            return False
+        channels = [
+            config.FSUB_CHNL_ID,
+            config.FSUB_CHNL_2_ID,
+            config.FSUB_CHNL_3_ID,
+            config.FSUB_CHNL_4_ID
+        ]
+        
+        for channel in channels:
+            if channel:  # Check if the channel ID is not empty
+                try:
+                    member = await client.get_chat_member(channel, user_id)
+                    if member.status not in ["member", "administrator", "creator"]:
+                        return False
+                except:
+                    return False
+        return True
+
+    def force_sub_button(self) -> InlineKeyboardMarkup:
+        buttons = []
+        channels = [
+            (config.FSUB_CHNL_ID, config.FSUB_CHNL_LINK),
+            (config.FSUB_CHNL_2_ID, config.FSUB_CHNL_2_LINK),
+            (config.FSUB_CHNL_3_ID, config.FSUB_CHNL_3_LINK),
+            (config.FSUB_CHNL_4_ID, config.FSUB_CHNL_4_LINK)
+        ]
+        
+        for channel_id, channel_link in channels:
+            if channel_id and channel_link:  # Check if both ID and link are not empty
+                buttons.append([InlineKeyboardButton(text="Join Channel", url=channel_link)])
+        
+        return InlineKeyboardMarkup(buttons)
 
     async def show_start(self, client, callback_query: CallbackQuery):
         await callback_query.message.edit_text(
@@ -39,15 +62,6 @@ class ButtonManager:
             ),
             reply_markup=self.about_button()
         )
-
-    def force_sub_button(self) -> InlineKeyboardMarkup:
-        buttons = [[
-            InlineKeyboardButton(
-                "Join Channel 🔔",
-                url=config.CHANNEL_LINK
-            )
-        ]]
-        return InlineKeyboardMarkup(buttons)
 
     def start_button(self) -> InlineKeyboardMarkup:
         buttons = [
@@ -94,4 +108,3 @@ class ButtonManager:
             ]
         ]
         return InlineKeyboardMarkup(buttons)
-        
