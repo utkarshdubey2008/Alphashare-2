@@ -72,7 +72,41 @@ async def start_command(client: Client, message: Message):
         except Exception as e:
             await message.reply_text(f"❌ Error: {str(e)}", protect_content=config.PRIVACY_MODE)
         return
+     
+if len(message.command) > 1 and message.command[1].startswith("batch_"):
+    batch_id = message.command[1].split("_")[1]
     
+    try:
+        # Get batch information from database
+        batch_data = await db.get_batch(batch_id)
+        
+        if not batch_data:
+            await message.reply_text("❌ Invalid batch link or batch has expired.")
+            return
+        
+        # Create batch contents message
+        text = f"📦 **Batch Files**\n\n"
+        text += f"🆔 Batch ID: `{batch_id}`\n"
+        text += f"📄 Total Files: {len(batch_data['files'])}\n\n"
+        
+        # Create buttons for each file
+        buttons = []
+        for idx, file in enumerate(batch_data['files'], 1):
+            text += f"{idx}. {file['name']} ({file['size_formatted']})\n"
+            buttons.append([
+                InlineKeyboardButton(
+                    f"📎 Download File {idx}",
+                    url=f"https://t.me/{client.username}?start=file_{file['file_id']}"
+                )
+            ])
+        
+        keyboard = InlineKeyboardMarkup(buttons)
+        
+        await message.reply_text(text, reply_markup=keyboard)
+        
+    except Exception as e:
+        await message.reply_text(f"❌ Error: {str(e)}")
+        
     # Regular start command
     await message.reply_text(
         config.Messages.START_TEXT.format(
