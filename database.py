@@ -5,6 +5,47 @@ from typing import Dict, Any, Optional, List
 
 
 class Database:
+    
+    
+    async def add_batch(self, batch_data: dict):
+        """Add a new batch upload to database"""
+        try:
+            return await self.batches.insert_one(batch_data)
+        except Exception as e:
+            print(f"Database Error (add_batch): {str(e)}")
+            raise
+
+    async def get_batch(self, batch_id: str):
+        """Get batch upload information"""
+        try:
+            return await self.batches.find_one({
+                "batch_id": batch_id,
+                "is_active": True
+            })
+        except Exception as e:
+            print(f"Database Error (get_batch): {str(e)}")
+            raise
+
+    async def delete_batch(self, batch_id: str):
+        """Delete a batch upload"""
+        try:
+            return await self.batches.delete_one({"batch_id": batch_id})
+        except Exception as e:
+            print(f"Database Error (delete_batch): {str(e)}")
+            raise
+
+    async def list_admin_batches(self, admin_id: int):
+        """List all batches created by an admin"""
+        try:
+            cursor = self.batches.find({
+                "admin_id": admin_id,
+                "is_active": True
+            }).sort("created_at", -1)
+            return await cursor.to_list(length=None)
+        except Exception as e:
+            print(f"Database Error (list_admin_batches): {str(e)}")
+            raise:
+            
     def __init__(self):
         self.client = AsyncIOMotorClient(config.MONGO_URI)
         self.db = self.client[config.DATABASE_NAME]
