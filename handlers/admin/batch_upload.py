@@ -4,6 +4,7 @@ from uuid import uuid4
 import time
 from database import Database
 from config import Messages, ADMIN_IDS, DB_CHANNEL_ID
+from utils import get_size_formatted  # Ensure this is imported
 
 # Store batch upload sessions
 admin_batch_sessions = {}
@@ -149,15 +150,47 @@ async def handle_batch_file(client: Client, message: Message):
         file_msg = await message.forward(DB_CHANNEL_ID)
         
         # Get file information
-        file_info = {
-            "file_id": file_msg.id,
-            "name": getattr(message.document, "file_name", None) or 
-                   f"{message.media.value}.{message.file_name.split('.')[-1]}",
-            "size": message.file_size,
-            "size_formatted": get_size_formatted(message.file_size),
-            "mime_type": getattr(message.document, "mime_type", ""),
-            "timestamp": time.time()
-        }
+        file_info = {}
+        
+        if message.document:
+            file_info = {
+                "file_id": file_msg.id,
+                "name": message.document.file_name,
+                "size": message.document.file_size,
+                "size_formatted": get_size_formatted(message.document.file_size),
+                "mime_type": message.document.mime_type,
+                "timestamp": time.time()
+            }
+        elif message.video:
+            file_info = {
+                "file_id": file_msg.id,
+                "name": message.video.file_name,
+                "size": message.video.file_size,
+                "size_formatted": get_size_formatted(message.video.file_size),
+                "mime_type": message.video.mime_type,
+                "timestamp": time.time()
+            }
+        elif message.audio:
+            file_info = {
+                "file_id": file_msg.id,
+                "name": message.audio.file_name,
+                "size": message.audio.file_size,
+                "size_formatted": get_size_formatted(message.audio.file_size),
+                "mime_type": message.audio.mime_type,
+                "timestamp": time.time()
+            }
+        elif message.photo:
+            file_info = {
+                "file_id": file_msg.id,
+                "name": f"photo_{file_msg.id}.jpg",
+                "size": message.photo.file_size,
+                "size_formatted": get_size_formatted(message.photo.file_size),
+                "mime_type": "image/jpeg",
+                "timestamp": time.time()
+            }
+        else:
+            await message.reply_text(f"❌ Unsupported file type")
+            return
         
         session.files.append(file_info)
         
