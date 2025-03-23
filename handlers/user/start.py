@@ -1,24 +1,21 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from database import Database
 from utils import ButtonManager
 import config
 import asyncio
-from ..utils.message_delete import schedule_message_deletion
+from utils.message_delete import schedule_message_deletion
 
 db = Database()
 button_manager = ButtonManager()
 
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
-    """Handle /start command and file sharing links"""
     await db.add_user(message.from_user.id, message.from_user.username)
-    
-    # Check if it's a file share command (has UUID)
+
     if len(message.command) > 1:
         file_uuid = message.command[1]
-        
-        # First check force subscription
+
         if not await button_manager.check_force_sub(client, message.from_user.id):
             await message.reply_text(
                 config.Messages.FORCE_SUB_TEXT,
@@ -26,16 +23,15 @@ async def start_command(client: Client, message: Message):
                 protect_content=config.PRIVACY_MODE
             )
             return
-        
-        # If subscribed, proceed with file sharing
+
         file_data = await db.get_file(file_uuid)
         if not file_data:
             await message.reply_text(
-                "❌ File not found or has been deleted!", 
-                protect_content=config.PRIVACY_MODE
+                "❌ File not found or has been deleted!",   
+                protect_content=config.PRIVACY_MODE  
             )
             return
-        
+
         try:
             if file_data["file_type"] == "video":
                 msg = await client.send_video(
@@ -51,11 +47,10 @@ async def start_command(client: Client, message: Message):
                     message_id=file_data["message_id"],
                     protect_content=config.PRIVACY_MODE
                 )
-            
+
             await db.increment_downloads(file_uuid)
             await db.update_file_message_id(file_uuid, msg.id, message.chat.id)
-            
-            # Handle auto-delete if configured
+
             if file_data.get("auto_delete"):
                 delete_time = file_data.get("auto_delete_time")
                 if delete_time:
@@ -65,49 +60,46 @@ async def start_command(client: Client, message: Message):
                         protect_content=config.PRIVACY_MODE
                     )
                     asyncio.create_task(schedule_message_deletion(
-                        client, file_uuid, message.chat.id, 
+                        client, file_uuid, message.chat.id,
                         [msg.id, info_msg.id], delete_time
                     ))
-                
+
         except Exception as e:
             await message.reply_text(f"❌ Error: {str(e)}", protect_content=config.PRIVACY_MODE)
         return
-     
-if len(message.command) > 1 and message.command[1].startswith("batch_"):
-    batch_id = message.command[1].split("_")[1]
-    
-    try:
-        # Get batch information from database
-        batch_data = await db.get_batch(batch_id)
-        
-        if not batch_data:
-            await message.reply_text("❌ Invalid batch link or batch has expired.")
-            return
-        
-        # Create batch contents message
-        text = f"📦 **Batch Files**\n\n"
-        text += f"🆔 Batch ID: `{batch_id}`\n"
-        text += f"📄 Total Files: {len(batch_data['files'])}\n\n"
-        
-        # Create buttons for each file
-        buttons = []
-        for idx, file in enumerate(batch_data['files'], 1):
-            text += f"{idx}. {file['name']} ({file['size_formatted']})\n"
-            buttons.append([
-                InlineKeyboardButton(
-                    f"📎 Download File {idx}",
-                    url=f"https://t.me/{client.username}?start=file_{file['file_id']}"
-                )
-            ])
-        
-        keyboard = InlineKeyboardMarkup(buttons)
-        
-        await message.reply_text(text, reply_markup=keyboard)
-        
-    except Exception as e:
-        await message.reply_text(f"❌ Error: {str(e)}")
-        
-    # Regular start command
+
+    if len(message.command) > 1 and message.command[1].startswith("batch_"):
+        batch_id = message.command[1].split("_")[1]
+
+        try:
+            batch_data = await db.get_batch(batch_id)
+
+            if not batch_data:
+                await message.reply_text("❌ Invalid batch link or batch has expired.")
+                return
+
+            text = f"📦 **Batch Files**\n\n"
+            text += f"🆔 Batch ID: `{batch_id}`\n"
+            text += f"📄 Total Files: {len(batch_data['files'])}\n\n"
+
+            buttons = []
+            for idx, file in enumerate(batch_data['files'], 1):
+                text += f"{idx}. {file['name']} ({file['size_formatted']})\n"
+                buttons.append([
+                    InlineKeyboardButton(
+                        f"📎 Download File {idx}",
+                        url=f"https://t.me/{client.username}?start=file_{file['file_id']}"
+                    )
+                ])
+
+            keyboard = InlineKeyboardMarkup(buttons)
+
+            await message.reply_text(text, reply_markup=keyboard)
+
+        except Exception as e:
+            await message.reply_text(f"❌ Error: {str(e)}")
+        return
+
     await message.reply_text(
         config.Messages.START_TEXT.format(
             bot_name=config.BOT_NAME,
