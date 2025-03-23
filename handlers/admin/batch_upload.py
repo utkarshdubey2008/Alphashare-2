@@ -1,7 +1,6 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 from uuid import uuid4
-import os
 import time
 from database import Database
 from config import Messages, ADMIN_IDS, DB_CHANNEL_ID
@@ -125,7 +124,6 @@ async def cancel_batch_upload(client: Client, message: Message):
 
 @Client.on_message(filters.private & filters.media & ~filters.command())
 async def handle_batch_file(client: Client, message: Message):
- 
     """Handle incoming files during batch upload (Admin Only)"""
     user_id = message.from_user.id
     
@@ -171,37 +169,3 @@ async def handle_batch_file(client: Client, message: Message):
         
     except Exception as e:
         await message.reply_text(f"❌ Failed to process file: {str(e)}")
-
-@Client.on_callback_query(filters.regex("^delete_batch_"))
-async def delete_batch_callback(client: Client, callback_query):
-    """Handle batch deletion (Admin Only)"""
-    user_id = callback_query.from_user.id
-    
-    if user_id not in ADMIN_IDS:
-        await callback_query.answer("⚠️ Only admins can delete batches!", show_alert=True)
-        return
-    
-    batch_id = callback_query.data.split("_")[2]
-    
-    try:
-        db = Database()
-        result = await db.delete_batch(batch_id)
-        
-        if result.deleted_count > 0:
-            await callback_query.message.edit_text(
-                f"✅ Batch {batch_id} has been deleted.",
-                reply_markup=None
-            )
-        else:
-            await callback_query.answer("❌ Batch not found!", show_alert=True)
-    
-    except Exception as e:
-        await callback_query.answer(f"❌ Error: {str(e)}", show_alert=True)
-
-def get_size_formatted(size_in_bytes):
-    """Convert size in bytes to human-readable format"""
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_in_bytes < 1024:
-            return f"{size_in_bytes:.2f} {unit}"
-        size_in_bytes /= 1024
-    return f"{size_in_bytes:.2f} TB"
