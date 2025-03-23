@@ -123,8 +123,9 @@ async def cancel_batch_upload(client: Client, message: Message):
     else:
         await message.reply_text("No active batch upload session.")
 
-@Client.on_message(filters.private & filters.media & ~filters.command)
+@Client.on_message(filters.private & filters.media & ~filters.command())
 async def handle_batch_file(client: Client, message: Message):
+ 
     """Handle incoming files during batch upload (Admin Only)"""
     user_id = message.from_user.id
     
