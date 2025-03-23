@@ -4,7 +4,7 @@ from database import Database
 from utils import ButtonManager
 import config
 import asyncio
-from utils.message_delete import schedule_message_deletion
+from handlers.utils.message_delete import schedule_message_deletion
 
 db = Database()
 button_manager = ButtonManager()
