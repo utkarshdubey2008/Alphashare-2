@@ -18,7 +18,6 @@ db = Database()
 logger = logging.getLogger(__name__)
 
 def get_size_formatted(size):
-    """Convert size in bytes to a human-readable format"""
     for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
         if size < 1024:
             return f"{size:.2f} {unit}"
@@ -26,13 +25,8 @@ def get_size_formatted(size):
     return f"{size:.2f} PB"
 
 async def check_force_sub(client: Client, user_id: int) -> list:
-    """
-    Check if user has joined force subscribe channels
-    Returns list of channels user hasn't joined
-    """
     if user_id in ADMIN_IDS:
         return []
-        
     not_joined = []
     for channel_id in FORCE_SUB_CHANNELS:
         try:
@@ -44,7 +38,6 @@ async def check_force_sub(client: Client, user_id: int) -> list:
     return not_joined
 
 async def get_force_sub_buttons(not_joined: list) -> InlineKeyboardMarkup:
-    """Generate force subscribe buttons"""
     buttons = []
     for channel_id in not_joined:
         if channel_id in FORCE_SUB_LINKS:
@@ -65,13 +58,9 @@ async def get_force_sub_buttons(not_joined: list) -> InlineKeyboardMarkup:
 async def start_command(client: Client, message: Message):
     user_id = message.from_user.id
     args = message.text.split()
-
-    # Handle batch command
     if len(args) > 1 and args[1].startswith("batch_"):
         await handle_batch_command(client, message, args[1])
         return
-
-    # Normal start command
     await message.reply_text(
         text=Messages.START_TEXT.format(
             bot_name=client.me.first_name,
@@ -81,12 +70,11 @@ async def start_command(client: Client, message: Message):
         disable_web_page_preview=True
     )
 
-async def handle_batch_command(client: Client, message: Message, arg: str):
+@Client.on_message(filters.command("upload") & filters.private)
+async def upload_command(client: Client, message: Message):
     try:
-        batch_id = arg.split("_")[1]
+        batch_id = message.text.split()[1]
         user_id = message.from_user.id
-
-        # Get batch data
         batch_data = await db.get_batch(batch_id)
         if not batch_data or not batch_data.get("is_active", False):
             await message.reply_text(
@@ -96,37 +84,56 @@ async def handle_batch_command(client: Client, message: Message, arg: str):
                 ]])
             )
             return
-
-        # Check force subscribe
         not_joined = await check_force_sub(client, user_id)
-        
-        # If user has joined all channels or is admin, send files
         if not not_joined:
-            await send_batch_files(client, message, batch_data)
+            await send_batch_files_without_forward(client, message, batch_data)
             return
-
-        # Send force subscribe message
         buttons = await get_force_sub_buttons(not_joined)
         buttons.inline_keyboard.append([
             InlineKeyboardButton("🔄 Try Again", callback_data=f"check_sub_{batch_id}")
         ])
-        
         await message.reply_text(
             text=Messages.FORCE_SUB_TEXT,
             reply_markup=buttons
         )
-
     except Exception as e:
-        logger.error(f"Error in batch command: {e}")
+        logger.error(f"Error in upload command: {e}")
         await message.reply_text("❌ An error occurred. Please try again later.")
 
-async def send_batch_files(client: Client, message: Message, batch_data: dict):
-    """Send batch files to user"""
+@Client.on_message(filters.command("batch_upload") & filters.private)
+async def batch_upload_command(client: Client, message: Message):
+    try:
+        batch_id = message.text.split()[1]
+        user_id = message.from_user.id
+        batch_data = await db.get_batch(batch_id)
+        if not batch_data or not batch_data.get("is_active", False):
+            await message.reply_text(
+                "❌ Invalid batch link or batch has been deleted.",
+                reply_markup=InlineKeyboardMarkup([[
+                    InlineKeyboardButton("🏠 Back to Home", callback_data="start")
+                ]])
+            )
+            return
+        not_joined = await check_force_sub(client, user_id)
+        if not not_joined:
+            await send_batch_files_without_forward(client, message, batch_data)
+            return
+        buttons = await get_force_sub_buttons(not_joined)
+        buttons.inline_keyboard.append([
+            InlineKeyboardButton("🔄 Try Again", callback_data=f"check_sub_{batch_id}")
+        ])
+        await message.reply_text(
+            text=Messages.FORCE_SUB_TEXT,
+            reply_markup=buttons
+        )
+    except Exception as e:
+        logger.error(f"Error in batch_upload command: {e}")
+        await message.reply_text("❌ An error occurred. Please try again later.")
+
+async def send_batch_files_without_forward(client: Client, message: Message, batch_data: dict):
     try:
         files = batch_data.get("files", [])
         total_size = sum(file.get('size', 0) for file in files)
-        
-        # Send batch info message
         info_text = (
             f"📦 **Batch Files**\n\n"
             f"📄 Total Files: {len(files)}\n"
@@ -135,36 +142,29 @@ async def send_batch_files(client: Client, message: Message, batch_data: dict):
             f"Sending files..."
         )
         status_msg = await message.reply_text(info_text)
-
-        # Send each file
         for i, file in enumerate(files, 1):
             try:
-                await client.forward_messages(
+                await client.send_document(
                     chat_id=message.chat.id,
-                    from_chat_id=DB_CHANNEL_ID,
-                    message_ids=file['file_id']
+                    document=file['file_id']
                 )
-                
-                if i % 5 == 0:  # Update status every 5 files
+                if i % 5 == 0:
                     await status_msg.edit_text(
                         f"{info_text}\n\n"
                         f"✅ Sent: {i}/{len(files)} files"
                     )
-                    await asyncio.sleep(0.5)  # Prevent flood wait
-                    
+                    await asyncio.sleep(0.5)
             except FloodWait as e:
                 await asyncio.sleep(e.value)
             except Exception as e:
                 logger.error(f"Error sending file {file.get('name')}: {e}")
                 continue
-
         await status_msg.edit_text(
             f"{info_text}\n\n"
             f"✅ Completed: {len(files)}/{len(files)} files sent"
         )
-
     except Exception as e:
-        logger.error(f"Error in send_batch_files: {e}")
+        logger.error(f"Error in send_batch_files_without_forward: {e}")
         await message.reply_text("❌ An error occurred while sending files.")
 
 @Client.on_callback_query(filters.regex('^check_sub_'))
@@ -172,18 +172,13 @@ async def check_subscription_callback(client: Client, callback: CallbackQuery):
     try:
         batch_id = callback.data.split('_')[2]
         user_id = callback.from_user.id
-
-        # Check force subscribe status
         not_joined = await check_force_sub(client, user_id)
-        
         if not_joined:
             await callback.answer(
                 "❌ Please join all channels first!", 
                 show_alert=True
             )
             return
-
-        # Get batch data
         batch_data = await db.get_batch(batch_id)
         if not batch_data or not batch_data.get("is_active", False):
             await callback.answer(
@@ -191,17 +186,12 @@ async def check_subscription_callback(client: Client, callback: CallbackQuery):
                 show_alert=True
             )
             return
-
-        # Delete force sub message
         await callback.message.delete()
-        
-        # Send the files
         message = await callback.message.reply_text("Processing...")
-        await send_batch_files(client, message, batch_data)
-        
+        await send_batch_files_without_forward(client, message, batch_data)
     except Exception as e:
         logger.error(f"Error in subscription callback: {e}")
         await callback.answer(
             "❌ An error occurred. Please try again.", 
             show_alert=True
-                                                                 )
+    )
