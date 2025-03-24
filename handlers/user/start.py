@@ -10,9 +10,8 @@ db = Database()
 button_manager = ButtonManager()
 
 async def check_force_subscription(client: Client, user_id: int):
-    """Automatically checks if the user is in force-sub channels and sends a message if not"""
     if not await button_manager.check_force_sub(client, user_id):
-        return InlineKeyboardMarkup(button_manager.force_sub_button())
+        return InlineKeyboardMarkup([button_manager.force_sub_button()])
     return None
 
 @Client.on_message(filters.command("start"))
@@ -181,4 +180,4 @@ async def batch_start_command(client: Client, message: Message):
         ),
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE
-            )
+    )
