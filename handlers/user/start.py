@@ -17,6 +17,14 @@ from datetime import datetime
 db = Database()
 logger = logging.getLogger(__name__)
 
+def get_size_formatted(size):
+    """Convert size in bytes to a human-readable format"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+    return f"{size:.2f} PB"
+
 async def check_force_sub(client: Client, user_id: int) -> list:
     """
     Check if user has joined force subscribe channels
@@ -196,4 +204,4 @@ async def check_subscription_callback(client: Client, callback: CallbackQuery):
         await callback.answer(
             "❌ An error occurred. Please try again.", 
             show_alert=True
-                                  )
+                                                                 )
