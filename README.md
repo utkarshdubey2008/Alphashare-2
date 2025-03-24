@@ -79,7 +79,7 @@ python main.py
 
 ### Heroku Deployment
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/utkarshdubey2008/AlphaShare)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/utkarsh212646/Alphashare-1)
 
 [![Watch Deployment Tutorial](https://img.shields.io/badge/Watch%20Tutorial-YouTube-red?logo=youtube)](https://youtu.be/8d9XsFhWj5s?si=02OPS6p_h6pov5HW)
 
