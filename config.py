@@ -1,8 +1,9 @@
 from typing import List, Dict
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
-
+# Load environment variables
 load_dotenv()
 
 # Bot Configuration
@@ -18,19 +19,42 @@ DATABASE_NAME = os.getenv("DATABASE_NAME")
 DB_CHANNEL_ID = int(os.getenv("DB_CHANNEL_ID"))
 
 # Force Subscription Channels
-FSUB_CHNL_ID = os.getenv("FSUB_CHNL_ID")
-FSUB_CHNL_LINK = os.getenv("FSUB_CHNL_LINK")
-FSUB_CHNL_2_ID = os.getenv("FSUB_CHNL_2_ID")
-FSUB_CHNL_2_LINK = os.getenv("FSUB_CHNL_2_LINK")
-FSUB_CHNL_3_ID = os.getenv("FSUB_CHNL_3_ID")
-FSUB_CHNL_3_LINK = os.getenv("FSUB_CHNL_3_LINK")
-FSUB_CHNL_4_ID = os.getenv("FSUB_CHNL_4_ID")
-FSUB_CHNL_4_LINK = os.getenv("FSUB_CHNL_4_LINK")
+FSUB_CHNL_ID = os.getenv("FSUB_CHNL_ID", None)
+FSUB_CHNL_LINK = os.getenv("FSUB_CHNL_LINK", None)
+FSUB_CHNL_2_ID = os.getenv("FSUB_CHNL_2_ID", None)
+FSUB_CHNL_2_LINK = os.getenv("FSUB_CHNL_2_LINK", None)
+FSUB_CHNL_3_ID = os.getenv("FSUB_CHNL_3_ID", None)
+FSUB_CHNL_3_LINK = os.getenv("FSUB_CHNL_3_LINK", None)
+FSUB_CHNL_4_ID = os.getenv("FSUB_CHNL_4_ID", None)
+FSUB_CHNL_4_LINK = os.getenv("FSUB_CHNL_4_LINK", None)
+
+# Force Subscribe Channel List - Only adds channels that are configured
+FORCE_SUB_CHANNELS = []
+FORCE_SUB_LINKS = {}
+
+# Add channels if they exist and are valid
+for i, (channel_id, channel_link) in enumerate([
+    (FSUB_CHNL_ID, FSUB_CHNL_LINK),
+    (FSUB_CHNL_2_ID, FSUB_CHNL_2_LINK),
+    (FSUB_CHNL_3_ID, FSUB_CHNL_3_LINK),
+    (FSUB_CHNL_4_ID, FSUB_CHNL_4_LINK)
+], 1):
+    if channel_id and channel_id.strip():
+        try:
+            cid = int(channel_id)
+            FORCE_SUB_CHANNELS.append(cid)
+            if channel_link and channel_link.strip():
+                FORCE_SUB_LINKS[cid] = channel_link
+        except ValueError:
+            print(f"⚠️ Warning: Invalid FSUB_CHNL_{i}_ID: {channel_id}")
 
 # Bot Information
-BOT_USERNAME = os.getenv("BOT_USERNAME")
-BOT_NAME = os.getenv("BOT_NAME")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "")
+BOT_NAME = os.getenv("BOT_NAME", "File Share Bot")
 BOT_VERSION = "1.3"
+OWNER_USERNAME = "utkarsh212646"  # Current user's login
+OWNER_ID = int(os.getenv("OWNER_ID", ""))
+
 # Privacy Mode Configuration
 PRIVACY_MODE = os.getenv("PRIVACY_MODE", "off").lower() == "on"
 
@@ -40,14 +64,14 @@ if not MODIJI_API_KEY:
     print("⚠️ Warning: MODIJI_API_KEY not set in environment variables")
 
 # Links
-CHANNEL_LINK = os.getenv("CHANNEL_LINK")
-DEVELOPER_LINK = os.getenv("DEVELOPER_LINK")
-SUPPORT_LINK = os.getenv("SUPPORT_LINK")
+CHANNEL_LINK = os.getenv("CHANNEL_LINK", "https://t.me/Thealphabotz")
+DEVELOPER_LINK = os.getenv("DEVELOPER_LINK", f"https://t.me/{OWNER_USERNAME}")
+SUPPORT_LINK = os.getenv("SUPPORT_LINK", "https://t.me/utkarsh212646")
 
 # For Koyeb/render 
-WEB_SERVER = bool(os.getenv("WEB_SERVER", True)) # make it True if deploying on koyeb/render else False
-PING_URL = os.getenv("PING_URL") # add your koyeb/render's public url
-PING_TIME = int(os.getenv("PING_TIME")) # Add time_out in seconds
+WEB_SERVER = bool(os.getenv("WEB_SERVER", True))
+PING_URL = os.getenv("PING_URL", "")
+PING_TIME = int(os.getenv("PING_TIME", "300"))
 
 # Admin IDs - Convert space-separated string to list of integers
 ADMIN_IDS: List[int] = [
@@ -56,8 +80,17 @@ ADMIN_IDS: List[int] = [
     if admin_id.strip().isdigit()
 ]
 
+# Add owner ID to admin IDs if not already present
+if OWNER_ID and OWNER_ID not in ADMIN_IDS:
+    ADMIN_IDS.append(OWNER_ID)
+
 # File size limit (2GB in bytes)
 MAX_FILE_SIZE = 2000 * 1024 * 1024
+
+# Time settings
+CURRENT_UTC = "2025-03-24 10:18:35"  # Current UTC time
+AUTO_DELETE_TIME = int(os.getenv("AUTO_DELETE_TIME", "3600"))  # Default 1 hour
+BATCH_SESSION_TIMEOUT = 1800  # 30 minutes
 
 # Supported file types and extensions
 SUPPORTED_TYPES = [
@@ -119,8 +152,8 @@ class Messages:
     • Force Subscribe
 
     📢 Join @Thealphabotz for updates!
-    👨‍💻 Contact @adarsh2626 for support
-    A Open Source Repo :- github.com/utkarshdubey2008/alphashare
+    👨‍💻 Contact @utkarsh212646 for support
+    A Open Source Repo :- github.com/utkarsh212646/alphashare
 
     Use /help to see available commands!
     """
@@ -143,21 +176,21 @@ class Messages:
     • /short - to shorten any url in modiji 
     usage :- /short example.com
 
-    An Open Source Repo :- github.com/utkarshdubey2008/alphashare
+    An Open Source Repo :- github.com/utkarsh212646/alphashare
 
-    ⚠️ For support: @adarsh2626
+    ⚠️ For support: @utkarsh212646
     """
 
     ABOUT_TEXT = """
     ℹ️ **About {bot_name}**
 
     **Version:** `{version}`
-    **Developer:** @adarsh2626
+    **Developer:** @utkarsh212646
     **Language:** Python
     **Framework:** Pyrogram
 
     📢 **Updates:** @Thealphabotz
-    🛠 **Support:** @adarsh2626
+    🛠 **Support:** @utkarsh212646
 
     **Features:**
     • Secure File Sharing
@@ -168,7 +201,7 @@ class Messages:
     • Enhanced Security
     • Automatic File Type Detection
 
-    Made with ❤️ by @adarsh2626
+    Made with ❤️ by @utkarsh212646
     """
 
     FILE_TEXT = """
