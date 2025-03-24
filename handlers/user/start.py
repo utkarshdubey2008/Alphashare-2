@@ -3,13 +3,13 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, 
 from pyrogram.errors import UserNotParticipant, FloodWait
 from database import Database
 from config import (
-    FORCE_SUB_CHANNELS, 
-    WELCOME_TEXT, 
+    FORCE_SUB_CHANNELS,
+    FORCE_SUB_LINKS,
+    Messages,
+    Buttons,
     ADMIN_IDS,
-    OWNER_ID,
     DB_CHANNEL_ID
 )
-from handlers.utils import get_size_formatted
 import asyncio
 import logging
 from datetime import datetime
@@ -22,7 +22,7 @@ async def check_force_sub(client: Client, user_id: int) -> list:
     Check if user has joined force subscribe channels
     Returns list of channels user hasn't joined
     """
-    if user_id in ADMIN_IDS or user_id == OWNER_ID:
+    if user_id in ADMIN_IDS:
         return []
         
     not_joined = []
@@ -35,19 +35,23 @@ async def check_force_sub(client: Client, user_id: int) -> list:
             logger.error(f"Error checking channel {channel_id}: {e}")
     return not_joined
 
-async def get_invite_links(client: Client, channels: list) -> list:
-    """Get invite links for channels"""
+async def get_force_sub_buttons(not_joined: list) -> InlineKeyboardMarkup:
+    """Generate force subscribe buttons"""
     buttons = []
-    for channel_id in channels:
-        try:
-            chat = await client.get_chat(channel_id)
-            invite_link = chat.invite_link
-            if not invite_link:
-                invite_link = await client.export_chat_invite_link(channel_id)
-            buttons.append([InlineKeyboardButton(f"📢 Join {chat.title}", url=invite_link)])
-        except Exception as e:
-            logger.error(f"Error getting invite link for {channel_id}: {e}")
-    return buttons
+    for channel_id in not_joined:
+        if channel_id in FORCE_SUB_LINKS:
+            link = FORCE_SUB_LINKS[channel_id]
+            try:
+                chat = await client.get_chat(channel_id)
+                buttons.append([
+                    InlineKeyboardButton(
+                        f"📢 Join {chat.title}",
+                        url=link
+                    )
+                ])
+            except Exception as e:
+                logger.error(f"Error getting chat info: {e}")
+    return InlineKeyboardMarkup(buttons)
 
 @Client.on_message(filters.command("start") & filters.private)
 async def start_command(client: Client, message: Message):
@@ -60,14 +64,12 @@ async def start_command(client: Client, message: Message):
         return
 
     # Normal start command
-    buttons = [[
-        InlineKeyboardButton("ℹ️ Help", callback_data="help"),
-        InlineKeyboardButton("📢 About", callback_data="about")
-    ]]
-    
     await message.reply_text(
-        text=WELCOME_TEXT.format(mention=message.from_user.mention),
-        reply_markup=InlineKeyboardMarkup(buttons),
+        text=Messages.START_TEXT.format(
+            bot_name=client.me.first_name,
+            user_mention=message.from_user.mention
+        ),
+        reply_markup=InlineKeyboardMarkup(Buttons.start_buttons()),
         disable_web_page_preview=True
     )
 
@@ -96,14 +98,14 @@ async def handle_batch_command(client: Client, message: Message, arg: str):
             return
 
         # Send force subscribe message
-        buttons = await get_invite_links(client, not_joined)
-        buttons.append([InlineKeyboardButton("🔄 Try Again", callback_data=f"check_sub_{batch_id}")])
+        buttons = await get_force_sub_buttons(not_joined)
+        buttons.inline_keyboard.append([
+            InlineKeyboardButton("🔄 Try Again", callback_data=f"check_sub_{batch_id}")
+        ])
         
         await message.reply_text(
-            "**⚠️ Access Restricted**\n\n"
-            "Please join our channel(s) to access the files!\n"
-            "Click the button(s) below to join, then click 'Try Again'",
-            reply_markup=InlineKeyboardMarkup(buttons)
+            text=Messages.FORCE_SUB_TEXT,
+            reply_markup=buttons
         )
 
     except Exception as e:
@@ -167,21 +169,31 @@ async def check_subscription_callback(client: Client, callback: CallbackQuery):
         not_joined = await check_force_sub(client, user_id)
         
         if not_joined:
-            await callback.answer("❌ Please join all channels first!", show_alert=True)
+            await callback.answer(
+                "❌ Please join all channels first!", 
+                show_alert=True
+            )
             return
 
         # Get batch data
         batch_data = await db.get_batch(batch_id)
         if not batch_data or not batch_data.get("is_active", False):
-            await callback.answer("❌ This batch is no longer available!", show_alert=True)
+            await callback.answer(
+                "❌ This batch is no longer available!", 
+                show_alert=True
+            )
             return
 
         # Delete force sub message
         await callback.message.delete()
         
         # Send the files
-        await send_batch_files(client, callback.message, batch_data)
+        message = await callback.message.reply_text("Processing...")
+        await send_batch_files(client, message, batch_data)
         
     except Exception as e:
         logger.error(f"Error in subscription callback: {e}")
-        await callback.answer("❌ An error occurred. Please try again.", show_alert=True)
+        await callback.answer(
+            "❌ An error occurred. Please try again.", 
+            show_alert=True
+                                  )
