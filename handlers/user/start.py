@@ -181,4 +181,4 @@ async def batch_start_command(client: Client, message: Message):
         ),
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE
-                )
+            )
