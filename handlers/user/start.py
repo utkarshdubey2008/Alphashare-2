@@ -9,27 +9,21 @@ from ..utils.message_delete import schedule_message_deletion
 db = Database()
 button_manager = ButtonManager()
 
-async def check_force_subscription(client: Client, user_id: int):
-    if not await button_manager.check_force_sub(client, user_id):
-        return InlineKeyboardMarkup([button_manager.force_sub_button()])
-    return None
-
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
     await db.add_user(message.from_user.id, message.from_user.username)
     
-    force_sub_buttons = await check_force_subscription(client, message.from_user.id)
-    if force_sub_buttons:
-        await message.reply_text(
-            "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join our Force-sub Channel and try again.",
-            reply_markup=force_sub_buttons,
-            protect_content=config.PRIVACY_MODE  
-        )
-        return
-    
     if len(message.command) > 1:
         file_uuid = message.command[1]
+        
+        if not await button_manager.check_force_sub(client, message.from_user.id):
+            await message.reply_text(
+                "**⚠️ You must join our channel to use this bot!**\n\n"
+                "Please join Our Forcesub Channel and try again.",
+                reply_markup=button_manager.force_sub_button(),
+                protect_content=config.PRIVACY_MODE  
+            )
+            return
         
         file_data = await db.get_file(file_uuid)
         if not file_data:
@@ -52,9 +46,12 @@ async def start_command(client: Client, message: Message):
                     info_msg = await msg.reply_text(
                         f"⏳ **File Auto-Delete Information**\n\n"
                         f"This file will be automatically deleted in {delete_time} minutes\n"
+                        f"• Delete Time: {delete_time} minutes\n"
+                        f"• Time Left: {delete_time} minutes\n"
                         f"💡 **Save this file to your saved messages before it's deleted!**",
                         protect_content=config.PRIVACY_MODE  
                     )
+                    
                     asyncio.create_task(schedule_message_deletion(
                         client, file_uuid, message.chat.id, [msg.id, info_msg.id], delete_time
                     ))
@@ -74,12 +71,11 @@ async def start_command(client: Client, message: Message):
 
 @Client.on_message(filters.command("upload") & filters.private & filters.reply)
 async def upload_command(client: Client, message: Message):
-    force_sub_buttons = await check_force_subscription(client, message.from_user.id)
-    if force_sub_buttons:
+    if not await button_manager.check_force_sub(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join our Force-sub Channel and try again.",
-            reply_markup=force_sub_buttons,
+            "Please join Our Forcesub Channel and try again.",
+            reply_markup=button_manager.force_sub_button(),
             protect_content=config.PRIVACY_MODE
         )
         return
@@ -103,12 +99,11 @@ async def upload_command(client: Client, message: Message):
 
 @Client.on_message(filters.command("batch_upload") & filters.private)
 async def batch_upload_command(client: Client, message: Message):
-    force_sub_buttons = await check_force_subscription(client, message.from_user.id)
-    if force_sub_buttons:
+    if not await button_manager.check_force_sub(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join our Force-sub Channel and try again.",
-            reply_markup=force_sub_buttons,
+            "Please join Our Forcesub Channel and try again.",
+            reply_markup=button_manager.force_sub_button(),
             protect_content=config.PRIVACY_MODE
         )
         return
@@ -140,18 +135,17 @@ async def batch_upload_command(client: Client, message: Message):
 async def batch_start_command(client: Client, message: Message):
     await db.add_user(message.from_user.id, message.from_user.username)
 
-    force_sub_buttons = await check_force_subscription(client, message.from_user.id)
-    if force_sub_buttons:
-        await message.reply_text(
-            "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join our Force-sub Channel and try again.",
-            reply_markup=force_sub_buttons,
-            protect_content=config.PRIVACY_MODE
-        )
-        return
-
     if len(message.command) > 1 and message.command[1].startswith("batch_"):
         batch_uuid = message.command[1].split("_")[1]
+
+        if not await button_manager.check_force_sub(client, message.from_user.id):
+            await message.reply_text(
+                "**⚠️ You must join our channel to use this bot!**\n\n"
+                "Please join Our Forcesub Channel and try again.",
+                reply_markup=button_manager.force_sub_button(),
+                protect_content=config.PRIVACY_MODE
+            )
+            return
 
         batch_data = await db.get_batch(batch_uuid)
         if not batch_data:
@@ -180,4 +174,4 @@ async def batch_start_command(client: Client, message: Message):
         ),
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE
-    )
+                    )
