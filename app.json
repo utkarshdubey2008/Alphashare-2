@@ -15,58 +15,123 @@
     "env": {
         "BOT_TOKEN": {
             "description": "Your Telegram Bot Token from @BotFather",
-            "required": true
+            "required": true,
+            "value": "7428798073:AAHVOfEQcYbQIiy6D7gHac2wwRMupVWL99k"
         },
         "API_ID": {
             "description": "Your API_ID from my.telegram.org",
-            "required": true
+            "required": true,
+            "value": "29303280"
         },
         "API_HASH": {
             "description": "Your API_HASH from my.telegram.org",
-            "required": true
+            "required": true,
+            "value": "76b83def3272349ca65757ffa6b8922c"
         },
         "MONGO_URI": {
             "description": "MongoDB Connection String",
-            "required": true
+            "required": true,
+            "value": "mongodb+srv://maxth12ud:iPjJbgdwgZZ7oVaN@cluster0.lso52.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
         },
         "DATABASE_NAME": {
             "description": "MongoDB Database Name",
             "required": true,
-            "value": "file_share_bot"
+            "value": "ALPHA_SHARE"
         },
         "DB_CHANNEL_ID": {
             "description": "Channel ID where files will be stored (with -100)",
-            "required": true
+            "required": true,
+            "value": "-1002263202735"
         },
-        "FORCE_SUB_CHANNEL": {
+        "FSUB_CHNL_ID": {
             "description": "Force Subscribe Channel ID (with -100)",
-            "required": true
+            "required": true,
+            "value": "-1001800664082"
+        },
+        "FSUB_CHNL_LINK": {
+            "description": "Force Subscribe Channel Link",
+            "required": true,
+            "value": "https://t.me/thealphabotz"
+        },
+        "FSUB_CHNL_2_ID": {
+            "description": "Second Force Subscribe Channel ID",
+            "required": false,
+            "value": "-1002318573841"
+        },
+        "FSUB_CHNL_2_LINK": {
+            "description": "Second Force Subscribe Channel Link",
+            "required": false,
+            "value": "https://t.me/+KCRIU7qFez83MzJl"
         },
         "BOT_USERNAME": {
             "description": "Your bot username without @ symbol",
-            "required": true
+            "required": true,
+            "value": "Alphasharedummybot"
         },
         "BOT_NAME": {
             "description": "Your bot name",
             "required": true,
-            "value": "Alpha File Share Bot"
+            "value": "AlphaShareBot"
+        },
+        "OWNER_ID": {
+            "description": "Bot Owner ID",
+            "required": true,
+            "value": "7727942354"
+        },
+        "MODIJI_API_KEY": {
+            "description": "Modiji API Key",
+            "required": true,
+            "value": "6adfd9b9944fb344038fb437f1b6156fe5f9958e"
         },
         "CHANNEL_LINK": {
             "description": "Your Force Sub channel link",
-            "required": true
+            "required": true,
+            "value": "https://t.me/thealphabotz"
         },
         "DEVELOPER_LINK": {
             "description": "Developer's Telegram username link",
-            "required": true
+            "required": true,
+            "value": "https://t.me/utkarsh212646"
         },
         "SUPPORT_LINK": {
             "description": "Support channel/group link",
-            "required": true
+            "required": true,
+            "value": "https://t.me/alphabotzchat"
+        },
+        "WEB_SERVER": {
+            "description": "Enable Web Server (True/False)",
+            "required": true,
+            "value": "True"
+        },
+        "PING_URL": {
+            "description": "Ping URL for Koyeb/Render",
+            "required": false,
+            "value": "https://universal-juditha-thealphabotzs-715e7a2d.koyeb.app/"
+        },
+        "PING_TIME": {
+            "description": "Ping interval time (seconds)",
+            "required": false,
+            "value": "300"
         },
         "ADMIN_IDS": {
             "description": "Admin user IDs (space-separated numbers, e.g., '123456789 987654321')",
             "required": true,
-            "value": "2009509228"
+            "value": "7727942354 7758708579"
+        },
+        "PRIVACY_MODE": {
+            "description": "Enable Privacy Mode (on/off)",
+            "required": true,
+            "value": "on"
+        },
+        "AUTO_DELETE_TIME": {
+            "description": "Auto delete time for messages (seconds)",
+            "required": true,
+            "value": "3600"
+        },
+        "CURRENT_UTC": {
+            "description": "Current UTC Time",
+            "required": true,
+            "value": "2025-03-24 10:22:07"
         }
     },
     "buildpacks": [
