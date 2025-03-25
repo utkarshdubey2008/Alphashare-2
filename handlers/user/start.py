@@ -4,30 +4,36 @@ from database import Database
 from utils import ButtonManager
 import config
 import asyncio
-from ..utils.message_delete import schedule_message_deletion
+from utils.message_delete import schedule_message_deletion
 
 db = Database()
 button_manager = ButtonManager()
 
+async def is_subscribed(client, user_id):
+    try:
+        member = await client.get_chat_member(config.FORCE_SUB_CHANNEL, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
+
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
-    """Handles the /start command"""
-    
     await db.add_user(message.from_user.id, message.from_user.username)
+
+    if not await is_subscribed(client, message.from_user.id):
+        await message.reply_text(
+            "**⚠️ You must join our channel to use this bot!**\n\n"
+            "Please join our Forcesub Channel and try again.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔔 Join Channel", url=f"https://t.me/{config.FORCE_SUB_CHANNEL}")],
+                [InlineKeyboardButton("✅ I Joined", callback_data="check_subscription")]
+            ]),
+            protect_content=config.PRIVACY_MODE
+        )
+        return
 
     if len(message.command) > 1:
         file_uuid = message.command[1]
-
-        # Check Force Subscription
-        if not await button_manager.check_force_sub(client, message.from_user.id):
-            await message.reply_text(
-                "**⚠️ You must join our channel to use this bot!**\n\n"
-                "Please join Our Forcesub Channel and try again.",
-                reply_markup=button_manager.force_sub_button(),
-                protect_content=config.PRIVACY_MODE  
-            )
-            return
-
         file_data = await db.get_file(file_uuid)
 
         if not file_data:
@@ -45,7 +51,6 @@ async def start_command(client: Client, message: Message):
             await db.increment_downloads(file_uuid)
             await db.update_file_message_id(file_uuid, msg.id, message.chat.id)
 
-            # Handle Auto-Delete if enabled
             if file_data.get("auto_delete"):
                 delete_time = file_data.get("auto_delete_time")
                 if delete_time:
@@ -65,7 +70,6 @@ async def start_command(client: Client, message: Message):
         
         return
 
-    # Default Start Message
     await message.reply_text(
         config.Messages.START_TEXT.format(
             bot_name=config.BOT_NAME,
@@ -75,17 +79,16 @@ async def start_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE  
     )
 
-
 @Client.on_message(filters.command("upload") & filters.private & filters.reply)
 async def upload_command(client: Client, message: Message):
-    """Handles the /upload command"""
-
-    # Check Force Subscription
-    if not await button_manager.check_force_sub(client, message.from_user.id):
+    if not await is_subscribed(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join Our Forcesub Channel and try again.",
-            reply_markup=button_manager.force_sub_button(),
+            "Please join our Forcesub Channel and try again.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔔 Join Channel", url=f"https://t.me/{config.FORCE_SUB_CHANNEL}")],
+                [InlineKeyboardButton("✅ I Joined", callback_data="check_subscription")]
+            ]),
             protect_content=config.PRIVACY_MODE
         )
         return
@@ -108,16 +111,16 @@ async def upload_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE
     )
 
-
 @Client.on_message(filters.command("batch_upload") & filters.private)
 async def batch_upload_command(client: Client, message: Message):
-    """Handles batch uploads"""
-
-    if not await button_manager.check_force_sub(client, message.from_user.id):
+    if not await is_subscribed(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
-            "Please join Our Forcesub Channel and try again.",
-            reply_markup=button_manager.force_sub_button(),
+            "Please join our Forcesub Channel and try again.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔔 Join Channel", url=f"https://t.me/{config.FORCE_SUB_CHANNEL}")],
+                [InlineKeyboardButton("✅ I Joined", callback_data="check_subscription")]
+            ]),
             protect_content=config.PRIVACY_MODE
         )
         return
@@ -145,21 +148,21 @@ async def batch_upload_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE
     )
 
-
 @Client.on_message(filters.command("batch_start") & filters.private)
 async def batch_start_command(client: Client, message: Message):
-    """Handles batch downloads"""
-
     await db.add_user(message.from_user.id, message.from_user.username)
 
     if len(message.command) > 1 and message.command[1].startswith("batch_"):
         batch_uuid = message.command[1].split("_")[1]
 
-        if not await button_manager.check_force_sub(client, message.from_user.id):
+        if not await is_subscribed(client, message.from_user.id):
             await message.reply_text(
                 "**⚠️ You must join our channel to use this bot!**\n\n"
-                "Please join Our Forcesub Channel and try again.",
-                reply_markup=button_manager.force_sub_button(),
+                "Please join our Forcesub Channel and try again.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔔 Join Channel", url=f"https://t.me/{config.FORCE_SUB_CHANNEL}")],
+                    [InlineKeyboardButton("✅ I Joined", callback_data="check_subscription")]
+                ]),
                 protect_content=config.PRIVACY_MODE
             )
             return
@@ -192,4 +195,4 @@ async def batch_start_command(client: Client, message: Message):
         ),
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE
-                  )
+)
