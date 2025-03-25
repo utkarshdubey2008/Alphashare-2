@@ -12,7 +12,7 @@ class ButtonManager:
     def _init_channels(self):
         """Initialize force subscription channels"""
         self.channel_configs = []
-        # Only initialize the first two channels as per requirement
+        
         channels = [
             (config.FSUB_CHNL_ID, config.FSUB_CHNL_LINK, "Main"),
             (config.FSUB_CHNL_2_ID, config.FSUB_CHNL_2_LINK, "Second")
@@ -21,7 +21,7 @@ class ButtonManager:
         for channel_id, link, name in channels:
             if channel_id and link:
                 try:
-                    # Handle channel ID with or without -100 prefix
+                    
                     clean_id = str(channel_id).replace("-100", "")
                     int_id = int(clean_id)
                     final_id = f"-100{int_id}" if not str(int_id).startswith("-100") else str(int_id)
