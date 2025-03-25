@@ -29,7 +29,7 @@ FSUB_CHNL_4_ID = os.getenv("FSUB_CHNL_4_ID", None)
 FSUB_CHNL_4_LINK = os.getenv("FSUB_CHNL_4_LINK", None)
 
 # Force Subscribe Channel List - Only adds channels that are configured
-FORCE_SUB_CHANNEL = []
+FORCE_SUB_CHANNELS = []
 FORCE_SUB_LINKS = {}
 
 # Add channels if they exist and are valid
