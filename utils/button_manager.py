@@ -38,7 +38,7 @@ class ButtonManager:
             try:
                 member = await client.get_chat_member(int(channel_id), user_id)
                 if member.status not in ["member", "administrator", "creator"]:
-                    return False
+                    return True
             except UserNotParticipant:
                 return False
             except BadRequest as e:
