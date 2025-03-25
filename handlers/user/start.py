@@ -139,14 +139,14 @@ async def batch_start_command(client: Client, message: Message):
         batch_uuid = message.command[1].split("_")[1]
 
         if not await button_manager.check_force_sub(client, message.from_user.id):
-            await message.reply_text(
-                "**⚠️ You must join our channel to use this bot!**\n\n"
-                "Please join Our Forcesub Channel and try again.",
-                reply_markup=button_manager.force_sub_button(),
-                protect_content=config.PRIVACY_MODE
-            )
-            return
-
+    await message.reply_text(
+        "**⚠️ You must join our channel to use this bot!**\n\n"
+        "Please join Our Forcesub Channel and try again.",
+        reply_markup=button_manager.force_sub_button(),
+        protect_content=config.PRIVACY_MODE  
+    )
+    return
+    
         batch_data = await db.get_batch(batch_uuid)
         if not batch_data:
             await message.reply_text("❌ Batch not found or has been deleted!", protect_content=config.PRIVACY_MODE)
