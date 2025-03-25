@@ -11,11 +11,14 @@ button_manager = ButtonManager()
 
 @Client.on_message(filters.command("start"))
 async def start_command(client: Client, message: Message):
-    await db.add_user(message.from_user.id, message.from_user.username)
+    """Handles the /start command"""
     
+    await db.add_user(message.from_user.id, message.from_user.username)
+
     if len(message.command) > 1:
         file_uuid = message.command[1]
-        
+
+        # Check Force Subscription
         if not await button_manager.check_force_sub(client, message.from_user.id):
             await message.reply_text(
                 "**⚠️ You must join our channel to use this bot!**\n\n"
@@ -24,12 +27,13 @@ async def start_command(client: Client, message: Message):
                 protect_content=config.PRIVACY_MODE  
             )
             return
-        
+
         file_data = await db.get_file(file_uuid)
+
         if not file_data:
-            await message.reply_text("❌ File not found or has been deleted!", protect_content=config.PRIVACY_MODE)  
+            await message.reply_text("❌ File not found or has been deleted!", protect_content=config.PRIVACY_MODE)
             return
-        
+
         try:
             msg = await client.copy_message(
                 chat_id=message.chat.id,
@@ -37,29 +41,31 @@ async def start_command(client: Client, message: Message):
                 message_id=file_data["message_id"],
                 protect_content=config.PRIVACY_MODE  
             )
+
             await db.increment_downloads(file_uuid)
             await db.update_file_message_id(file_uuid, msg.id, message.chat.id)
-            
+
+            # Handle Auto-Delete if enabled
             if file_data.get("auto_delete"):
                 delete_time = file_data.get("auto_delete_time")
                 if delete_time:
                     info_msg = await msg.reply_text(
                         f"⏳ **File Auto-Delete Information**\n\n"
-                        f"This file will be automatically deleted in {delete_time} minutes\n"
-                        f"• Delete Time: {delete_time} minutes\n"
-                        f"• Time Left: {delete_time} minutes\n"
+                        f"This file will be automatically deleted in {delete_time} minutes.\n"
                         f"💡 **Save this file to your saved messages before it's deleted!**",
                         protect_content=config.PRIVACY_MODE  
                     )
-                    
+
                     asyncio.create_task(schedule_message_deletion(
                         client, file_uuid, message.chat.id, [msg.id, info_msg.id], delete_time
                     ))
-                
+
         except Exception as e:
-            await message.reply_text(f"❌ Error: {str(e)}", protect_content=config.PRIVACY_MODE)  
+            await message.reply_text(f"❌ Error: {str(e)}", protect_content=config.PRIVACY_MODE)
+        
         return
-    
+
+    # Default Start Message
     await message.reply_text(
         config.Messages.START_TEXT.format(
             bot_name=config.BOT_NAME,
@@ -69,8 +75,12 @@ async def start_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE  
     )
 
+
 @Client.on_message(filters.command("upload") & filters.private & filters.reply)
 async def upload_command(client: Client, message: Message):
+    """Handles the /upload command"""
+
+    # Check Force Subscription
     if not await button_manager.check_force_sub(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
@@ -81,12 +91,13 @@ async def upload_command(client: Client, message: Message):
         return
 
     file_message = message.reply_to_message
-    if not file_message.document and not file_message.video and not file_message.audio and not file_message.photo:
+
+    if not any([file_message.document, file_message.video, file_message.audio, file_message.photo]):
         await message.reply_text("❌ Please reply to a valid file (document, video, audio, or photo).", protect_content=config.PRIVACY_MODE)
         return
 
     file_uuid = await db.save_file(file_message, message.from_user.id)
-    
+
     await message.reply_text(
         f"✅ **File Successfully Uploaded!**\n\n"
         f"🔗 **Download Link:** `{config.BOT_USERNAME}?start={file_uuid}`\n\n"
@@ -97,8 +108,11 @@ async def upload_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE
     )
 
+
 @Client.on_message(filters.command("batch_upload") & filters.private)
 async def batch_upload_command(client: Client, message: Message):
+    """Handles batch uploads"""
+
     if not await button_manager.check_force_sub(client, message.from_user.id):
         await message.reply_text(
             "**⚠️ You must join our channel to use this bot!**\n\n"
@@ -131,23 +145,27 @@ async def batch_upload_command(client: Client, message: Message):
         protect_content=config.PRIVACY_MODE
     )
 
+
 @Client.on_message(filters.command("batch_start") & filters.private)
 async def batch_start_command(client: Client, message: Message):
+    """Handles batch downloads"""
+
     await db.add_user(message.from_user.id, message.from_user.username)
 
     if len(message.command) > 1 and message.command[1].startswith("batch_"):
         batch_uuid = message.command[1].split("_")[1]
 
         if not await button_manager.check_force_sub(client, message.from_user.id):
-    await message.reply_text(
-        "**⚠️ You must join our channel to use this bot!**\n\n"
-        "Please join Our Forcesub Channel and try again.",
-        reply_markup=button_manager.force_sub_button(),
-        protect_content=config.PRIVACY_MODE  
-    )
-    return
-    
+            await message.reply_text(
+                "**⚠️ You must join our channel to use this bot!**\n\n"
+                "Please join Our Forcesub Channel and try again.",
+                reply_markup=button_manager.force_sub_button(),
+                protect_content=config.PRIVACY_MODE
+            )
+            return
+
         batch_data = await db.get_batch(batch_uuid)
+
         if not batch_data:
             await message.reply_text("❌ Batch not found or has been deleted!", protect_content=config.PRIVACY_MODE)
             return
@@ -174,4 +192,4 @@ async def batch_start_command(client: Client, message: Message):
         ),
         reply_markup=button_manager.start_button(),
         protect_content=config.PRIVACY_MODE
-                    )
+                  )
