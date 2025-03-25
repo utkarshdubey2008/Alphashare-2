@@ -10,7 +10,6 @@ class ButtonManager:
         self._init_channels()
 
     def _init_channels(self):
-        """Initialize force subscription channels"""
         self.channel_configs = []
         
         channels = [
@@ -21,7 +20,6 @@ class ButtonManager:
         for channel_id, link, name in channels:
             if channel_id and link:
                 try:
-                    
                     clean_id = str(channel_id).replace("-100", "")
                     int_id = int(clean_id)
                     final_id = f"-100{int_id}" if not str(int_id).startswith("-100") else str(int_id)
@@ -30,14 +28,13 @@ class ButtonManager:
                     logging.error(f"Invalid channel ID format for {name} channel: {channel_id}")
 
     async def check_force_sub(self, client, user_id: int) -> bool:
-        """Check user's subscription status in all required channels"""
         if not self.channel_configs:
             return True
 
         for channel_id, _, name in self.channel_configs:
             try:
                 member = await client.get_chat_member(int(channel_id), user_id)
-                if member.status not in ["member", "administrator", "creator"]:
+                if member.status in ["member", "administrator", "creator"]:
                     return True
             except UserNotParticipant:
                 return False
@@ -52,10 +49,9 @@ class ButtonManager:
             except Exception as e:
                 logging.error(f"Unexpected error checking {name} channel ({channel_id}): {str(e)}")
                 continue
-        return True
+        return False
 
     def force_sub_button(self) -> InlineKeyboardMarkup:
-        """Generate force subscription buttons without refresh button"""
         buttons = []
         
         for channel_id, channel_link, name in self.channel_configs:
@@ -70,7 +66,6 @@ class ButtonManager:
         return InlineKeyboardMarkup(buttons)
 
     async def show_start(self, client, callback_query: CallbackQuery):
-        """Show start message after checking subscription"""
         try:
             is_subbed = await self.check_force_sub(client, callback_query.from_user.id)
             if is_subbed:
@@ -92,7 +87,6 @@ class ButtonManager:
             logging.error(f"Error in show_start: {str(e)}")
 
     async def show_help(self, client, callback_query: CallbackQuery):
-        """Show help message after checking subscription"""
         try:
             is_subbed = await self.check_force_sub(client, callback_query.from_user.id)
             if is_subbed:
@@ -111,7 +105,6 @@ class ButtonManager:
             logging.error(f"Error in show_help: {str(e)}")
 
     async def show_about(self, client, callback_query: CallbackQuery):
-        """Show about message after checking subscription"""
         try:
             is_subbed = await self.check_force_sub(client, callback_query.from_user.id)
             if is_subbed:
@@ -133,7 +126,6 @@ class ButtonManager:
             logging.error(f"Error in show_about: {str(e)}")
 
     def start_button(self) -> InlineKeyboardMarkup:
-        """Create start menu buttons"""
         buttons = [
             [
                 InlineKeyboardButton("Help 📜", callback_data="help"),
@@ -147,7 +139,6 @@ class ButtonManager:
         return InlineKeyboardMarkup(buttons)
 
     def help_button(self) -> InlineKeyboardMarkup:
-        """Create help menu buttons"""
         buttons = [
             [
                 InlineKeyboardButton("Home 🏠", callback_data="home"),
@@ -160,7 +151,6 @@ class ButtonManager:
         return InlineKeyboardMarkup(buttons)
 
     def about_button(self) -> InlineKeyboardMarkup:
-        """Create about menu buttons"""
         buttons = [
             [
                 InlineKeyboardButton("Home 🏠", callback_data="home"),
@@ -173,7 +163,6 @@ class ButtonManager:
         return InlineKeyboardMarkup(buttons)
 
     def file_button(self, file_uuid: str) -> InlineKeyboardMarkup:
-        """Create file action buttons"""
         buttons = [
             [
                 InlineKeyboardButton("Download 📥", callback_data=f"download_{file_uuid}"),
